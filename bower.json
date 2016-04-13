@@ -1,0 +1,14 @@
+{
+  "name": "bower install --save jQuery d3",
+  "homepage": "https://github.com/zhen9261/D3_Lab",
+  "description": "",
+  "main": "",
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}
