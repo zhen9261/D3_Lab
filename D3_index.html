@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<style>
+
+    body {
+        font: 10px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .dot {
+        stroke: #000;
+    }
+
+</style>
+<body>
+<h4 id="hovered">chevrolet chevelle malibu</h4>
+<div id="plot">
+    <svg id="svg"></svg>
+</div>
+<div class="ui">
+    <div>
+        <label>X-Axis</label>
+        <select class="axis" id="sel-x">
+            <option value="mpg">mpg</option>
+            <option value="cylinders">cylinders</option>
+            <option value="displacement">displacement</option>
+            <option value="horsepower">horsepower</option>
+            <option value="weight">weight</option>
+            <option value="acceleration">acceleration</option>
+            <option value="model.year">model.year</option>
+        </select>
+        <label>Y-Axis</label>
+        <select class="axis" id="sel-y">
+            <option value="mpg">mpg</option>
+            <option value="cylinders">cylinders</option>
+            <option value="displacement">displacement</option>
+            <option value="horsepower">horsepower</option>
+            <option value="weight">weight</option>
+            <option value="acceleration">acceleration</option>
+            <option value="model.year">model.year</option>
+        </select>
+    </div>
+    <div>
+        <input id="mpg-min" type="text" value="0" size="10">
+        <input id="mpg-max" type="text" value="30" size="10">
+        <button id="update">Query MPG</button>
+
+    </div>
+</div>
+<script src="http://d3js.org/d3.v3.min.js"></script>
+<script>
+    var newData = [];
+    var margin = {top: 20, right: 20, bottom: 30, left: 40},
+            width = 960 - margin.left - margin.right,
+            height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear()
+            .range([0, width]);
+
+    var y = d3.scale.linear()
+            .range([height, 0]);
+
+    var color = d3.scale.category10();
+    var xAxis = d3.svg.axis()
+            .scale(x)
+            .orient("bottom");
+
+    var yAxis = d3.svg.axis()
+            .scale(y)
+            .orient("left");
+
+
+
+    d3.csv("car.csv", function(error, data) {
+        if (error) throw error;
+        newData = data;
+        newData.forEach(function(d) {
+            d.mpg = +d.mpg;
+            d.cylinders = +d.cylinders;
+            d.displacement = +d.displacement;
+            d.horsepower = +d.horsepower;
+            d.weight = +d.weight;
+            d.acceleration = +d.acceleration;
+            d['model.year'] = +d['model.year'];
+        });
+        update(newData);
+        d3.selectAll('.axis').on('change',function(){
+            update(newData);
+        });
+        mpgUpdate(data);
+
+
+    });
+    function update(data) {
+            d3.selectAll("svg > *").remove();
+            var svg = d3.select("#svg")
+                    .attr("width", width + margin.left + margin.right)
+                    .attr("height", height + margin.top + margin.bottom)
+                    .append("g")
+                    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+            var xName = document.getElementById('sel-x').value;
+            var yName = document.getElementById('sel-y').value;
+            x.domain(d3.extent(data, function (d) {
+                return d[xName];
+            })).nice();
+            y.domain(d3.extent(data, function (d) {
+                return d[yName];
+            })).nice();
+            svg.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + height + ")")
+                    .call(xAxis)
+                    .append("text")
+                    .attr("class", "label")
+                    .attr("x", width)
+                    .attr("y", -6)
+                    .style("text-anchor", "end")
+                    .text(xName);
+            svg.append("g")
+                    .attr("class", "y axis")
+                    .call(yAxis)
+                    .append("text")
+                    .attr("class", "label")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", ".71em")
+                    .style("text-anchor", "end")
+                    .text(yName);
+            svg.selectAll(".dot")
+                    .remove("circle")
+                    .data(data)
+                    .enter()
+                    .append("circle")
+                    .attr("class", "dot")
+                    .attr("r", 3.5)
+                    .attr("cx", function (d) {
+                        return x(d[xName]);
+                    })
+                    .attr("cy", function (d) {
+                        return y(d[yName]);
+                    })
+                    .style("fill", function (d) {
+                        return color(d.species);
+                    });
+
+            var legend = svg.selectAll(".legend")
+                    .data(color.domain())
+                    .enter().append("g")
+                    .attr("class", "legend")
+                    .attr("transform", function (d, i) {
+                        return "translate(0," + i * 20 + ")";
+                    });
+
+            legend.append("rect")
+                    .attr("x", width - 18)
+                    .attr("width", 18)
+                    .attr("height", 18)
+                    .style("fill", color);
+
+            legend.append("text")
+                    .attr("x", width - 24)
+                    .attr("y", 9)
+                    .attr("dy", ".35em")
+                    .style("text-anchor", "end")
+                    .text(function (d) {
+                        return d;
+                    });
+        d3.selectAll(".dot")
+                .on("mouseover", function(d, i) {
+                    d3.select("#hovered")
+                            .html(d.name)});
+    }
+    function mpgUpdate(data){
+        d3.select('#update').on('click', function () {
+            newData = [];
+            var mpgMin = document.getElementById("mpg-min").value;
+            var mpgMax = document.getElementById("mpg-max").value;
+            data.forEach(function (d) {
+                if(parseInt(d.mpg) >= parseInt(mpgMin) && parseInt(d.mpg) <= parseInt(mpgMax)){
+                    newData.push(d);
+                }
+            });
+            update(newData);
+
+        });
+    }
+
+</script>
+</body>
+</html>
