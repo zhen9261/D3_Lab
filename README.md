@@ -1,6 +1,6 @@
 # D3_Lab
-Its lab 10 of Big Data Course
-Here is the feature demo
+lab 10 of Big Data Course
+Feature demo
 ![](demo.gif)
 
 Features
